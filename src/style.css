@@ -1,3 +1,44 @@
 body {
-    color: black;
+    color: white;
+    background-color: black;
+}
+
+.sample-image{
+    height: 50px;
+    width: 50px;
+    background-color: red;
+}
+
+.circle {
+    border-radius: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.solar-system {
+    position: relative;
+    background-color: darkblue;
+    display: flex;
+    flex-direction: row;
+}
+
+.voyager-one {
+    background-color: white;
+    color: black !important;
+    height: 20px;
+    width: 50px;
+    overflow: hidden;
+}
+.sun {
+    height: 300px;
+    aspect-ratio: 1/1;
+    background-color: orangered;
+}
+
+.planet {
+    height: 100px;
+    width: 100px;
+    background-color: blue;
 }
