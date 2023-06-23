@@ -1,3 +1,4 @@
+
 //const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
 const CHANNELS = 2;
 const HERTZ = 44100;
@@ -5,7 +6,7 @@ const HERTZ = 44100;
 const audioContext = new AudioContext();
 const analyzer = audioContext.createAnalyser();
 
-let audio :object;
+let audio;
 
 const testBuffer = audioContext.createBuffer(
     CHANNELS,
@@ -13,7 +14,7 @@ const testBuffer = audioContext.createBuffer(
     HERTZ
 )
 
-function getAudio(): void{
+function getAudio(){
     fetch(`./src/assets/audio/voyager.mp3`)
         .then(data => data.arrayBuffer())
         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
@@ -24,11 +25,11 @@ function getAudio(): void{
         })
 }
 
-function audioTest(var1 :object): void {
+function audioTest(var1) {
     console.log(var1);
 }
 
-function init() :void {
+function init() {
     const button = document.querySelector('button');
     button?.addEventListener('click', () => {
         console.log(`getting data 1 src`);
