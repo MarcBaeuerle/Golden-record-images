@@ -42,3 +42,10 @@ body {
     width: 100px;
     background-color: blue;
 }
+
+#draw {
+    border: 1px solid white;
+    display: flex;
+}
+
+
