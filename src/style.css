@@ -1,6 +1,6 @@
 body {
     color: white;
-    background-color: black;
+    /* background-color: black; */
 }
 
 .sample-image{
@@ -48,4 +48,6 @@ body {
     display: flex;
 }
 
-
+canvas {
+    border: 1px solid black;
+}
