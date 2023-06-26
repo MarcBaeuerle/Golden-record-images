@@ -1,4 +1,5 @@
-
+// 512 columns make up one image
+// each column is 8.3ms long
 //const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
 const CHANNELS = 2;
 const CANVAS_HEIGHT = 390;
@@ -116,12 +117,41 @@ function visualizeAudio(audioBuffer) {
     renderFrame();
 }
 
+
+function drawFunc() {
+    let canvas = dom.img;
+    let ctx = canvas.getContext("2d");
+    let w = canvas.width, h = canvas.height;
+    
+    let scanlineImageData = ctx.createImageData(w, 1);
+    let scanlinePixelRow = scanlineImageData.data;
+
+    let imageData = ctx.getImageData(0, 0, w, h);
+    ctx.clearRect(0, 0, w, h);
+    ctx.putImageData(imageData, 0, -2);
+
+    for (let i = 0; i < w; i++) {
+        let intensity = 100;
+        scanlinePixelRow[0+i*4] = intensity;
+        scanlinePixelRow[1+i*4] = intensity;
+        scanlinePixelRow[2+i*4] = intensity;
+        scanlinePixelRow[3+i*4] = 255;
+    }
+
+    ctx.putImageData(scanlineImageData, 0, h - 2);
+    ctx.putImageData(scanlineImageData, 0, h - 1);
+
+
+}
+
 function init() {
 	dom = {
         button: document.querySelector('button'),
         leftCanvas: document.querySelector('.left-canvas'),
         rightCanvas: document.querySelector('.right-canvas'),
         canvas: document.querySelector('#waveformCanvas'),
+        img: document.querySelector("#img"),
+        drawBtn: document.querySelector("#draw-circle"),
 	};
     
     context = dom.canvas.getContext('2d');
@@ -130,6 +160,11 @@ function init() {
         console.log(`getting data 1 sec`);
         getAudio();
     });
+
+    dom.drawBtn.addEventListener('click', () => {
+            drawFunc();
+    });
+
 }
 
 document.addEventListener('DOMContentLoaded', init);
