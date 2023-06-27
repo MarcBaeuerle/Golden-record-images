@@ -2,8 +2,8 @@
 // each column is 8.3ms long
 //const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
 const CHANNELS = 2;
-let CANVAS_HEIGHT;
-let CANVAS_WIDTH;
+const CANVAS_HEIGHT = 364;
+const CANVAS_WIDTH = 512;
 const SAMPLE_RATE = 44100;
 const red = 0;
 const grn = 1;
@@ -17,7 +17,7 @@ const IMAGE_DATA = {
         amplitudeData: null,
         pointer: 0,
         timeStamps: [
-            31.276, 43.304           
+            691496, 956716, 691863
         ],
         colors: [
             bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //0
@@ -203,34 +203,34 @@ function drawFunc() {
         scanlinePixelRow[3+i*4] = 255;
     }
 
-    ctx.putImageData(scanlineImageData, 0, h - 2);
+    //ctx.putImageData(scanlineImageData, 0, h - 2);
     ctx.putImageData(scanlineImageData, 0, h - 1);
 }
 
-function drawSingleLine(channel, index) {
+function drawSingleLine(channel, offset, wIndex) {
     let canvas = dom.leftChannelImage
     let context = canvas.getContext('2d');
-    context.willRead
 
-    let lineImageData = context.createImageData(CANVAS_WIDTH, 1);
+    let lineImageData = context.createImageData(1, CANVAS_HEIGHT);
     let linePixelRow = lineImageData.data;
 
     //Shift the previous rows to make room for a new row 
-    let imageData = context.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    context.putImageData(imageData, 0, -2);
+    //let imageData = context.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    //context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    //context.putImageData(imageData, 1, 0);
 
-    for (let i = 0; i < CANVAS_WIDTH; i++) {
-        let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
-        linePixelRow[0+i*4] = intensity; //red
-        linePixelRow[1+i*4] = intensity;  //green
-        linePixelRow[2+i*4] = intensity; //blue
-        linePixelRow[3+i*4] = 255; //alpha
-        channel.pointer += 1;
+    console.log(channel.pointer);
+    for (let i = 0; i < CANVAS_HEIGHT; i++) {
+       // let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
+        //let intensity = 108 - channel.amplitudeData[i] * 2555;
+        let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
+        linePixelRow[0+i*4] = intensity;
+        linePixelRow[1+i*4] = intensity;
+        linePixelRow[2+i*4] = intensity;
+        linePixelRow[3+i*4] = 255;
     }
 
-    context.putImageData(lineImageData, 0, CANVAS_HEIGHT-2);
-    context.putImageData(lineImageData, 0, CANVAS_HEIGHT-1);
+    context.putImageData(lineImageData, wIndex, 0);
 
 }
 
@@ -243,23 +243,24 @@ function init() {
         leftChannelImage: document.querySelector("#leftChannelImage"),
         drawBtn: document.querySelector("#draw-circle"),
 	};
-    CANVAS_WIDTH = dom.leftChannelImage.width;
-    CANVAS_HEIGHT = dom.leftChannelImage.height;
+    getAudio();
     
     context = dom.canvas.getContext('2d');
 
     dom.button.addEventListener('click', () => {
         console.log(`getting data 1 sec`);
-        getAudio();
     });
 
     dom.drawBtn.addEventListener('click', () => {
-        IMAGE_DATA.left.pointer = Math.floor(IMAGE_DATA.left.timeStamps[0] * SAMPLE_RATE);
-        console.log(IMAGE_DATA.left.pointer);    
-        for (let y = 0; y < CANVAS_WIDTH; y++) {
-            drawSingleLine(IMAGE_DATA.left, 0);
-            console.log(`Pointer: ${IMAGE_DATA.left.pointer}`);    
+        IMAGE_DATA.left.pointer = IMAGE_DATA.left.timeStamps[0];
+        for (let i = 0; i < CANVAS_WIDTH; i++) {
+            drawSingleLine(IMAGE_DATA.left, IMAGE_DATA.left.pointer, i);
+            IMAGE_DATA.left.pointer += CANVAS_HEIGHT;
+            if (i % 2 === 0) {
+                IMAGE_DATA.left.pointer += 6;
+            }
         }
+        console.log(IMAGE_DATA.left.pointer);
     });
 
 }
