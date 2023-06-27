@@ -2,9 +2,74 @@
 // each column is 8.3ms long
 //const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
 const CHANNELS = 2;
-const CANVAS_HEIGHT = 390;
-const CANVAS_WIDTH = 520;
+let CANVAS_HEIGHT;
+let CANVAS_WIDTH;
 const SAMPLE_RATE = 44100;
+const red = 0;
+const grn = 1;
+const blu = 2
+const bnw = 255;
+const IMAGE_DATA = {
+    imagesPerChannel: 78,
+    lineTime: 0.017,
+    imageTime: 520 * 0.017,
+    left: {
+        amplitudeData: null,
+        pointer: 0,
+        timeStamps: [
+            31.276, 43.304           
+        ],
+        colors: [
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //0
+            bnw, bnw, bnw, red, grn, blu, red, grn, blu, bnw,   //10
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn,   //20
+            blu, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw,   //30
+            bnw, red, grn, blu, red, grn, blu, red, grn, blu,   //40
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn,   //50
+            blu, red, grn, blu, bnw, red, grn, blu, red, grn,   //60
+            blu, red, grn, blu, bnw, bnw, bnw, bnw,             //70
+        ],
+        orientation: [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   //0
+            0, 0, 2, 2, 2, 2, 0, 0, 0, 0,   //10
+            0, 0, 0, 1, 1, 1, 1, 1, 1, 1,   //20
+            1, 1, 1, 1, 1, 1, 0, 0, 1, 1,   //30
+            1, 1, 1, 1, 1, 1, 1, 0, 0, 0,   //40
+            0, 0, 1, 0, 0, 0, 0, 0, 0, 0,   //50
+            0, 1, 1, 1, 1, 1, 1, 1, 1, 1,   //60
+            1, 1, 1, 1, 2, 1, 1, 1,         //70
+        ]
+    },
+
+    right: {
+        amplitudeData: null,
+        pointer: 0,
+        timeStamps: [
+
+        ],
+        colors: [
+            red, grn, blu, bnw, bnw, bnw, bnw, red, grn, blu,   //0
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw,   //10
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //20
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw,   //30
+            red, grn, blu, bnw, bnw, bnw, bnw, red, grn, blu,   //40
+            bnw, bnw, red, grn, blu, bnw, bnw, bnw, bnw, bnw,   //50
+            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red,   //60
+            grn, blu, bnw, red, grn, blu, bnw, bnw,             //70
+        ],
+        orientation: [
+            1, 1, 1, 0, 0, 0, 0, 1, 1, 1,   //0
+            0, 0, 1, 1, 0, 1, 0, 1, 1, 0,   //10
+            0, 0, 0, 0, 0, 1, 0, 0, 0, 0,   //20
+            0, 0, 0, 0, 0, 0, 1, 0, 0, 0,   //30
+            0, 0, 0, 0, 0, 0, 1, 1, 1, 1,   //40
+            0, 1, 0, 0, 0, 1, 0, 0, 0, 1,   //50
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   //60
+            0, 0, 1, 0, 0, 0, 0, 2,         //70
+        ]
+    }
+}
+
 
 const audioContext = new AudioContext({
     sampleRate: SAMPLE_RATE,
@@ -29,9 +94,10 @@ function getAudio(){
             console.log(`Length ${leftChannelData.length / decodedAudio.sampleRate}`);
             let leftAmplitudeData = Array.from(leftChannelData, sample => sample);
             let rightAmplitudeData = Array.from(rightChannelData, sample => Math.abs(sample));
+            IMAGE_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample);
             //printAudioBuffer(leftAmplitudeData, rightAmplitudeData);
             printAudioBufferTimeFrame(leftAmplitudeData, 0, 1);
-            visualizeAudio(decodedAudio);
+            //visualizeAudio(decodedAudio);
         })
         .catch(error => {
             console.log('Error fetching or decoding audio: ', error);
@@ -117,9 +183,8 @@ function visualizeAudio(audioBuffer) {
     renderFrame();
 }
 
-
 function drawFunc() {
-    let canvas = dom.img;
+    let canvas = dom.leftChannelImage;
     let ctx = canvas.getContext("2d");
     let w = canvas.width, h = canvas.height;
     
@@ -140,7 +205,32 @@ function drawFunc() {
 
     ctx.putImageData(scanlineImageData, 0, h - 2);
     ctx.putImageData(scanlineImageData, 0, h - 1);
+}
 
+function drawSingleLine(channel, index) {
+    let canvas = dom.leftChannelImage
+    let context = canvas.getContext('2d');
+    context.willRead
+
+    let lineImageData = context.createImageData(CANVAS_WIDTH, 1);
+    let linePixelRow = lineImageData.data;
+
+    //Shift the previous rows to make room for a new row 
+    let imageData = context.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    context.putImageData(imageData, 0, -2);
+
+    for (let i = 0; i < CANVAS_WIDTH; i++) {
+        let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
+        linePixelRow[0+i*4] = intensity; //red
+        linePixelRow[1+i*4] = intensity;  //green
+        linePixelRow[2+i*4] = intensity; //blue
+        linePixelRow[3+i*4] = 255; //alpha
+        channel.pointer += 1;
+    }
+
+    context.putImageData(lineImageData, 0, CANVAS_HEIGHT-2);
+    context.putImageData(lineImageData, 0, CANVAS_HEIGHT-1);
 
 }
 
@@ -150,9 +240,11 @@ function init() {
         leftCanvas: document.querySelector('.left-canvas'),
         rightCanvas: document.querySelector('.right-canvas'),
         canvas: document.querySelector('#waveformCanvas'),
-        img: document.querySelector("#img"),
+        leftChannelImage: document.querySelector("#leftChannelImage"),
         drawBtn: document.querySelector("#draw-circle"),
 	};
+    CANVAS_WIDTH = dom.leftChannelImage.width;
+    CANVAS_HEIGHT = dom.leftChannelImage.height;
     
     context = dom.canvas.getContext('2d');
 
@@ -162,7 +254,12 @@ function init() {
     });
 
     dom.drawBtn.addEventListener('click', () => {
-            drawFunc();
+        IMAGE_DATA.left.pointer = Math.floor(IMAGE_DATA.left.timeStamps[0] * SAMPLE_RATE);
+        console.log(IMAGE_DATA.left.pointer);    
+        for (let y = 0; y < CANVAS_WIDTH; y++) {
+            drawSingleLine(IMAGE_DATA.left, 0);
+            console.log(`Pointer: ${IMAGE_DATA.left.pointer}`);    
+        }
     });
 
 }
