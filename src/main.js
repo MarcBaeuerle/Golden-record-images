@@ -17,7 +17,7 @@ const IMAGE_DATA = {
         amplitudeData: null,
         pointer: 0,
         timeStamps: [
-            691496, 956716, 691863
+            691496, 956716, 1227516, 1488461, 1745996, 
         ],
         colors: [
             bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //0
@@ -81,7 +81,7 @@ let context;
 let audio;
 let leftChannelData;
 let rightChannelData;
-
+let gotAudio = false;
 
 function getAudio(){
     fetch(`./src/assets/audio/voyager.mp3`)
@@ -183,28 +183,12 @@ function visualizeAudio(audioBuffer) {
     renderFrame();
 }
 
-function drawFunc() {
-    let canvas = dom.leftChannelImage;
-    let ctx = canvas.getContext("2d");
-    let w = canvas.width, h = canvas.height;
-    
-    let scanlineImageData = ctx.createImageData(w, 1);
-    let scanlinePixelRow = scanlineImageData.data;
 
-    let imageData = ctx.getImageData(0, 0, w, h);
-    ctx.clearRect(0, 0, w, h);
-    ctx.putImageData(imageData, 0, -2);
+function findNextDrop(channel) {
+    let current = channel.pointer;
 
-    for (let i = 0; i < w; i++) {
-        let intensity = 100;
-        scanlinePixelRow[0+i*4] = intensity;
-        scanlinePixelRow[1+i*4] = intensity;
-        scanlinePixelRow[2+i*4] = intensity;
-        scanlinePixelRow[3+i*4] = 255;
-    }
+    console.log(current);
 
-    //ctx.putImageData(scanlineImageData, 0, h - 2);
-    ctx.putImageData(scanlineImageData, 0, h - 1);
 }
 
 function drawSingleLine(channel, offset, wIndex) {
@@ -239,8 +223,9 @@ function init() {
         button: document.querySelector('button'),
         leftCanvas: document.querySelector('.left-canvas'),
         rightCanvas: document.querySelector('.right-canvas'),
-        canvas: document.querySelector('#waveformCanvas'),
+        canvas: document.querySelector('#leftWaveformCanvas'),
         leftChannelImage: document.querySelector("#leftChannelImage"),
+        rightChannelImage: document.querySelector("#rightChannelImage"),
         drawBtn: document.querySelector("#draw-circle"),
 	};
     getAudio();
@@ -252,6 +237,7 @@ function init() {
     });
 
     dom.drawBtn.addEventListener('click', () => {
+        if (!gotAudio) return;
         IMAGE_DATA.left.pointer = IMAGE_DATA.left.timeStamps[0];
         for (let i = 0; i < CANVAS_WIDTH; i++) {
             drawSingleLine(IMAGE_DATA.left, IMAGE_DATA.left.pointer, i);
@@ -260,6 +246,7 @@ function init() {
                 IMAGE_DATA.left.pointer += 6;
             }
         }
+        findNextDrop(IMAGE_DATA.left);
         console.log(IMAGE_DATA.left.pointer);
     });
 
