@@ -1,6 +1,3 @@
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 // 512 columns make up one image
 // each column is 8.3ms long
 //const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
@@ -12,13 +9,13 @@ const red = 0;
 const grn = 1;
 const blu = 2
 const bnw = 255;
-const IMAGE_DATA = {
-    imagesPerChannel: 78,
-    lineTime: 0.017,
-    imageTime: 520 * 0.017,
+const IMG_DATA = {
     left: {
+        imageCanvas: null,
+        oscilliscopeCanvas: null,
         amplitudeData: null,
         pointer: 0,
+                        // "Welcome to the digital stone age" - Ron Barry
         timeStamps: [
             691479, 956699, 1226764, 1488444, 1746346, 2003886, 2253818,            //0
             2495501, 2738833, 2981916, 3295249, 3549540, 3812059, 4072272,          //7
@@ -31,7 +28,7 @@ const IMAGE_DATA = {
             14999878, 15249029, 15499590, 15755055, 15996882, 16247674, 16493176,   //56
             16748591, 17006625, 17265784, 17511919, 17772949, 18015077, 18278128,   //63
             18541817, 18838219, 19081581, 19338182, 19582170, 19829758, 20078770,   //70
-            20354900,                                                               //77
+            20354900                                                                //77
         ],
         colors: [
             bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //0
@@ -57,9 +54,22 @@ const IMAGE_DATA = {
 
     right: {
         amplitudeData: null,
+        imageCanvas: null,
+        oscilliscopeCanvas: null,
         pointer: 0,
         timeStamps: [
-
+            748881, 995880, 1256346, 1519980, 1776918, 2029338, 2275851,            //0
+            2522144, 2774972, 3023788, 3288648, 3537656, 3790711, 4046923,          //7
+            4299934, 4548285, 4804358, 5055090, 5310427, 5566445, 5819090,          //14
+            6069487, 6325550, 6582765, 6836043, 7093042, 7351177, 7600559,          //21
+            7849962, 8115741, 8366424, 8624873, 8877756, 9129103, 9377380,          //28
+            9625985, 9876773, 10129022, 10380286, 10629822, 10889655, 11140077,     //35
+            11396186, 11641174, 11900453, 12143850, 12398103, 12654434, 12911229,   //42
+            13170090, 13427893, 13692082, 13946719, 14205961, 14468525, 14719864,   //49
+            14959214, 15213806, 15469032, 15723726, 15973659, 16223783, 16476165,   //56
+            16738170, 16996230, 17249097, 17504002, 17764240, 18023237, 18294660,   //63
+            18550444, 18831088, 19079192, 19331292, 19592658, 19839241, 20089443,   //70 
+            20338733                                                                //77
         ],
         colors: [
             red, grn, blu, bnw, bnw, bnw, bnw, red, grn, blu,   //0
@@ -109,10 +119,9 @@ function getAudio(){
             console.log(`Length ${leftChannelData.length / decodedAudio.sampleRate}`);
             let leftAmplitudeData = Array.from(leftChannelData, sample => sample);
             let rightAmplitudeData = Array.from(rightChannelData, sample => Math.abs(sample));
-            IMAGE_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample);
-            //printAudioBuffer(leftAmplitudeData, rightAmplitudeData);
+            IMG_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample);
+            IMG_DATA.right.amplitudeData = Array.from(rightChannelData, sample => sample);
             printAudioBufferTimeFrame(leftAmplitudeData, 0, 1);
-            //visualizeAudio(decodedAudio);
 
             gotAudio = true;
         })
@@ -203,6 +212,8 @@ function visualizeAudio(audioBuffer) {
 function findNextPeak(channel, position) {
     const LOCAL_MIN = position + 730;
     const LOCAL_MAX = position + 740;
+    
+    if (LOCAL_MAX > channel.amplitudeData.length) return;
 
     let newMax = 0;
     let newPosition = position;
@@ -217,7 +228,7 @@ function findNextPeak(channel, position) {
 }
 
 function drawSingleLine(channel, offset, wIndex) {
-    let canvas = dom.leftChannelImage
+    let canvas = channel.imageCanvas;
     let context = canvas.getContext('2d');
 
     let lineImageData = context.createImageData(1, CANVAS_HEIGHT);
@@ -229,61 +240,60 @@ function drawSingleLine(channel, offset, wIndex) {
     //context.putImageData(imageData, 1, 0);
 
     console.log(channel.pointer);
-    for (let i = 0; i < CANVAS_HEIGHT; i++) {
-       // let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
-        //let intensity = 108 - channel.amplitudeData[i] * 2555;
-        let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
-        linePixelRow[0+i*4] = intensity;
-        linePixelRow[1+i*4] = intensity;
-        linePixelRow[2+i*4] = intensity;
-        linePixelRow[3+i*4] = 255;
-    }
-
     setTimeout(() => {
+        for (let i = 0; i < CANVAS_HEIGHT; i++) {
+            // let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
+            //let intensity = 108 - channel.amplitudeData[i] * 2555;
+            let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
+            linePixelRow[0+i*4] = intensity;
+            linePixelRow[1+i*4] = intensity;
+            linePixelRow[2+i*4] = intensity;
+            linePixelRow[3+i*4] = 255;
+        }
+
         context.putImageData(lineImageData, wIndex, 0);
-    },200);
+    },1000);
 
 }
 
 
-async function displayImage(channel, index) {
-    setTimeout(() => {
-        if (!gotAudio) return;
-        channel.pointer = channel.timeStamps[index];
-        let oldPosition;
+function displayImage(channel, index) {
+    if (!gotAudio) return;
+    channel.pointer = channel.timeStamps[index];
+    let oldPosition;
 
-        for (let i = 0; i < CANVAS_WIDTH; i++) {
-            drawSingleLine(IMAGE_DATA.left, IMAGE_DATA.left.pointer, i);
+    for (let i = 0; i < CANVAS_WIDTH; i++) {
+        drawSingleLine(channel, channel.pointer, i);
 
-            if (i % 2 === 0 && i!= 0) {
-                findNextPeak(IMAGE_DATA.left, oldPosition);
-            } else {
-                oldPosition = IMAGE_DATA.left.pointer;
+        if (i % 2 === 0 && i!= 0) {
+            findNextPeak(channel, oldPosition);
+        } else {
+            oldPosition = channel.pointer;
 
-                IMAGE_DATA.left.pointer += CANVAS_HEIGHT;
-            }
+            channel.pointer += CANVAS_HEIGHT;
         }
-        console.log(IMAGE_DATA.left.pointer);
-    }, 1000);
+    }
+    console.log(channel.pointer);
 
 }
 
 function init() {
 	dom = {
-        button: document.querySelector('button'),
         leftCanvas: document.querySelector('.left-canvas'),
         rightCanvas: document.querySelector('.right-canvas'),
         canvas: document.querySelector('#leftWaveformCanvas'),
-        leftChannelImage: document.querySelector("#leftChannelImage"),
-        rightChannelImage: document.querySelector("#rightChannelImage"),
         drawBtn: document.querySelector("#draw-circle"),
 	};
+
+    IMG_DATA.right.oscilliscopeCanvas = document.querySelector("#rightWaveformCanvas");
+    IMG_DATA.left.oscilliscopeCanvas = document.querySelector("#leftWaveformCanvas");
+    IMG_DATA.right.imageCanvas = document.querySelector("#rightChannelImage");
+    IMG_DATA.left.imageCanvas = document.querySelector("#leftChannelImage");
+    
+    CANVAS_WIDTH = IMG_DATA.right.imageCanvas.width;
+    CANVAS_HEIGHT = IMG_DATA.right.imageCanvas.height;
     getAudio();
 
-    CANVAS_WIDTH = dom.leftChannelImage.width;
-    console.log(CANVAS_WIDTH);
-    CANVAS_HEIGHT = dom.leftChannelImage.height;
-    console.log(CANVAS_HEIGHT);
     
     context = dom.canvas.getContext('2d');
 
@@ -293,7 +303,8 @@ function init() {
 
     dom.drawBtn.addEventListener('click', () => {
         for (let i = 0; i < 78; i++) {
-            displayImage(IMAGE_DATA.left, i);
+            displayImage(IMG_DATA.right, i);
+            displayImage(IMG_DATA.left, i);
         }
     });
 
