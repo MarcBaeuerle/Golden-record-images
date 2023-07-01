@@ -1,3 +1,4 @@
+let debug = 0;
 // 512 columns make up one image
 // each column is 8.3ms long
 //const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
@@ -10,6 +11,7 @@ const grn = 1;
 const blu = 2
 const bnw = 255;
 const IMG_DATA = {
+    offset: 0,
     left: {
         imageCanvas: null,
         oscilliscopeCanvas: null,
@@ -115,8 +117,8 @@ function getAudio(){
         .then(decodedAudio => {
             leftChannelData = decodedAudio.getChannelData(0);
             rightChannelData = decodedAudio.getChannelData(1);
-            console.log(`Sample rate: ${decodedAudio.sampleRate}`)
-            console.log(`Length ${leftChannelData.length / decodedAudio.sampleRate}`);
+            if (debug) console.log(`Sample rate: ${decodedAudio.sampleRate}`)
+            if (debug) console.log(`Length ${leftChannelData.length / decodedAudio.sampleRate}`);
             let leftAmplitudeData = Array.from(leftChannelData, sample => sample);
             let rightAmplitudeData = Array.from(rightChannelData, sample => Math.abs(sample));
             IMG_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample);
@@ -126,16 +128,16 @@ function getAudio(){
             gotAudio = true;
         })
         .catch(error => {
-            console.log('Error fetching or decoding audio: ', error);
+            if (debug) console.log('Error fetching or decoding audio: ', error);
         })
 }
 
 //test print float values
 function printAudioBuffer(buf1, buf2) {
-    console.log(buf1.length / 44100);
-    console.log(buf2.length);
+    if (debug) console.log(buf1.length / 44100);
+    if (debug) console.log(buf2.length);
     for (let i = 0; i < 10; i++) {
-        //console.log(`buf1: ${buf1[i]}, buf2: ${buf2[i]}`);
+        //if (debug) console.log(`buf1: ${buf1[i]}, buf2: ${buf2[i]}`);
     }
     return;
 }
@@ -143,21 +145,24 @@ function printAudioBuffer(buf1, buf2) {
 function printAudioBufferTimeFrame(buf, startTime, endTime) {
     let startSample = Math.floor(startTime * SAMPLE_RATE);
     let endSample = Math.floor(endTime * SAMPLE_RATE);
-    console.log(`between: ${startTime} and ${endTime}`);
-    console.log(`start: ${startSample} + end: ${endSample}`);
+    if (debug) console.log(`between: ${startTime} and ${endTime}`);
+    if (debug) console.log(`start: ${startSample} + end: ${endSample}`);
  
     let total = 0
     let max = 0;
     for (let i = startSample; i < endSample; i++) {
-        //console.log(`${i} buf: ${buf[i]}`);
+        //if (debug) console.log(`${i} buf: ${buf[i]}`);
         if (buf[i] > max) {
             max = buf[i];
         }
-        //console.log(`${i} diff: ${buf[i] - buf[i-1]}`)
+        //if (debug) console.log(`${i} diff: ${buf[i] - buf[i-1]}`)
         total += 1;
     }
-    console.log(total);
-    console.log(max);
+    if (debug) console.log(total);
+    if (debug) console.log(max);
+}
+
+function updateOscilloscope(channel, index) {
 }
 
 function visualizeAudio(audioBuffer) {
@@ -239,42 +244,59 @@ function drawSingleLine(channel, offset, wIndex) {
     //context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     //context.putImageData(imageData, 1, 0);
 
-    console.log(channel.pointer);
-    setTimeout(() => {
-        for (let i = 0; i < CANVAS_HEIGHT; i++) {
-            // let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
-            //let intensity = 108 - channel.amplitudeData[i] * 2555;
-            let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
-            linePixelRow[0+i*4] = intensity;
-            linePixelRow[1+i*4] = intensity;
-            linePixelRow[2+i*4] = intensity;
-            linePixelRow[3+i*4] = 255;
-        }
+    if (debug) console.log(channel.pointer);
+    for (let i = 0; i < CANVAS_HEIGHT; i++) {
+        // let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
+        //let intensity = 108 - channel.amplitudeData[i] * 2555;
+        let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
+        linePixelRow[0+i*4] = intensity;
+        linePixelRow[1+i*4] = intensity;
+        linePixelRow[2+i*4] = intensity;
+        linePixelRow[3+i*4] = 255;
+    }
 
-        context.putImageData(lineImageData, wIndex, 0);
-    },1000);
+    context.putImageData(lineImageData, wIndex, 0);
 
 }
 
-
 function displayImage(channel, index) {
-    if (!gotAudio) return;
     channel.pointer = channel.timeStamps[index];
     let oldPosition;
 
-    for (let i = 0; i < CANVAS_WIDTH; i++) {
+    let i = 0;
+
+    const interval = setInterval(() => {
+        if (i === CANVAS_WIDTH) clearInterval(interval);
+
         drawSingleLine(channel, channel.pointer, i);
 
         if (i % 2 === 0 && i!= 0) {
             findNextPeak(channel, oldPosition);
         } else {
             oldPosition = channel.pointer;
-
             channel.pointer += CANVAS_HEIGHT;
         }
-    }
-    console.log(channel.pointer);
+        i++;
+    }, 8);
+}
 
+function updateImageOffset(num) {
+    if (num) {
+        IMG_DATA.offset = num;
+    } else {
+        (IMG_DATA.offset < 78) ? IMG_DATA.offset += 1 : IMG_DATA.offset = 0;
+    }
+}
+
+function startDisplayingChannel(channel, updater) {
+    setInterval(async () => {
+        if (!gotAudio) return;
+        displayImage(channel, IMG_DATA.offset);
+        updateOscilloscope(channel, IMG_DATA.offset);
+
+        //prevents updateImageOffset() from getting called twice
+        if (updater) updateImageOffset();
+    }, 6000);
 }
 
 function init() {
@@ -283,29 +305,27 @@ function init() {
         rightCanvas: document.querySelector('.right-canvas'),
         canvas: document.querySelector('#leftWaveformCanvas'),
         drawBtn: document.querySelector("#draw-circle"),
+        imgSelector: document.querySelector("#imgSelector"),
 	};
 
     IMG_DATA.right.oscilliscopeCanvas = document.querySelector("#rightWaveformCanvas");
-    IMG_DATA.left.oscilliscopeCanvas = document.querySelector("#leftWaveformCanvas");
     IMG_DATA.right.imageCanvas = document.querySelector("#rightChannelImage");
+    IMG_DATA.left.oscilliscopeCanvas = document.querySelector("#leftWaveformCanvas");
     IMG_DATA.left.imageCanvas = document.querySelector("#leftChannelImage");
     
     CANVAS_WIDTH = IMG_DATA.right.imageCanvas.width;
     CANVAS_HEIGHT = IMG_DATA.right.imageCanvas.height;
     getAudio();
-
     
     context = dom.canvas.getContext('2d');
 
-    dom.button.addEventListener('click', () => {
-        console.log(`getting data 1 sec`);
+    dom.imgSelector.addEventListener('input', () => {
+        console.log( dom.imgSelector.value);
     });
 
     dom.drawBtn.addEventListener('click', () => {
-        for (let i = 0; i < 78; i++) {
-            displayImage(IMG_DATA.right, i);
-            displayImage(IMG_DATA.left, i);
-        }
+        startDisplayingChannel(IMG_DATA.left, 1);
+        startDisplayingChannel(IMG_DATA.right, 0);
     });
 
 }
