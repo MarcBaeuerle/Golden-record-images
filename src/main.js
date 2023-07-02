@@ -13,6 +13,7 @@ const bnw = 255;
 const IMG_DATA = {
     offset: 0,
     left: {
+        go: true,
         imageCanvas: null,
         oscilliscopeCanvas: null,
         amplitudeData: null,
@@ -42,19 +43,10 @@ const IMG_DATA = {
             blu, red, grn, blu, bnw, red, grn, blu, red, grn,   //60
             blu, red, grn, blu, bnw, bnw, bnw, bnw,             //70
         ],
-        orientation: [
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   //0
-            0, 0, 2, 2, 2, 2, 0, 0, 0, 0,   //10
-            0, 0, 0, 1, 1, 1, 1, 1, 1, 1,   //20
-            1, 1, 1, 1, 1, 1, 0, 0, 1, 1,   //30
-            1, 1, 1, 1, 1, 1, 1, 0, 0, 0,   //40
-            0, 0, 1, 0, 0, 0, 0, 0, 0, 0,   //50
-            0, 1, 1, 1, 1, 1, 1, 1, 1, 1,   //60
-            1, 1, 1, 1, 2, 1, 1, 1,         //70
-        ]
     },
 
     right: {
+        go: true,
         amplitudeData: null,
         imageCanvas: null,
         oscilliscopeCanvas: null,
@@ -83,16 +75,6 @@ const IMG_DATA = {
             bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red,   //60
             grn, blu, bnw, red, grn, blu, bnw, bnw,             //70
         ],
-        orientation: [
-            1, 1, 1, 0, 0, 0, 0, 1, 1, 1,   //0
-            0, 0, 1, 1, 0, 1, 0, 1, 1, 0,   //10
-            0, 0, 0, 0, 0, 1, 0, 0, 0, 0,   //20
-            0, 0, 0, 0, 0, 0, 1, 0, 0, 0,   //30
-            0, 0, 0, 0, 0, 0, 1, 1, 1, 1,   //40
-            0, 1, 0, 0, 0, 1, 0, 0, 0, 1,   //50
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   //60
-            0, 0, 1, 0, 0, 0, 0, 2,         //70
-        ]
     }
 }
 
@@ -126,6 +108,7 @@ function getAudio(){
             printAudioBufferTimeFrame(leftAmplitudeData, 0, 1);
 
             gotAudio = true;
+            console.log(`Got audio`);
         })
         .catch(error => {
             if (debug) console.log('Error fetching or decoding audio: ', error);
@@ -238,6 +221,9 @@ function drawSingleLine(channel, offset, wIndex) {
 
     let lineImageData = context.createImageData(1, CANVAS_HEIGHT);
     let linePixelRow = lineImageData.data;
+    
+
+    let previousImageData = context.getImageData(0, wIndex, 1, CANVAS_HEIGHT);
 
     //Shift the previous rows to make room for a new row 
     //let imageData = context.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -246,12 +232,10 @@ function drawSingleLine(channel, offset, wIndex) {
 
     if (debug) console.log(channel.pointer);
     for (let i = 0; i < CANVAS_HEIGHT; i++) {
-        // let intensity = 108 - channel.amplitudeData[channel.pointer] * 2555;
-        //let intensity = 108 - channel.amplitudeData[i] * 2555;
         let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
-        linePixelRow[0+i*4] = intensity;
-        linePixelRow[1+i*4] = intensity;
-        linePixelRow[2+i*4] = intensity;
+        linePixelRow[0+i*4] = intensity; //red
+        linePixelRow[1+i*4] = intensity; //green
+        linePixelRow[2+i*4] = intensity; //blue
         linePixelRow[3+i*4] = 255;
     }
 
@@ -260,14 +244,20 @@ function drawSingleLine(channel, offset, wIndex) {
 }
 
 function displayImage(channel, index) {
+    channel.go = false;
     channel.pointer = channel.timeStamps[index];
     let oldPosition;
 
     let i = 0;
 
     const interval = setInterval(() => {
-        if (i === CANVAS_WIDTH) clearInterval(interval);
-
+        if (i === CANVAS_WIDTH) {
+            clearInterval(interval);
+            setTimeout(() => {
+                channel.go = true;
+            }, 500);
+            return;
+        }
         drawSingleLine(channel, channel.pointer, i);
 
         if (i % 2 === 0 && i!= 0) {
@@ -277,26 +267,36 @@ function displayImage(channel, index) {
             channel.pointer += CANVAS_HEIGHT;
         }
         i++;
-    }, 8);
+    }, 16);
 }
 
-function updateImageOffset(num) {
-    if (num) {
+function updateImageOffset(caller, num) {
+
+    if (caller === "slider") {
         IMG_DATA.offset = num;
+        console.log(IMG_DATA.offset);
+        return;
+    }  
+
+    if (IMG_DATA.offset < 78) {
+        IMG_DATA.offset += 1;
     } else {
-        (IMG_DATA.offset < 78) ? IMG_DATA.offset += 1 : IMG_DATA.offset = 0;
+        IMG_DATA.offset = 0;
     }
+    console.log(IMG_DATA.offset);
 }
 
 function startDisplayingChannel(channel, updater) {
-    setInterval(async () => {
+    setInterval(() => {
         if (!gotAudio) return;
-        displayImage(channel, IMG_DATA.offset);
-        updateOscilloscope(channel, IMG_DATA.offset);
+        if (channel.go) {
+            displayImage(channel, IMG_DATA.offset);
+            updateOscilloscope(channel, IMG_DATA.offset);
 
-        //prevents updateImageOffset() from getting called twice
-        if (updater) updateImageOffset();
-    }, 6000);
+            //prevents updateImageOffset() from getting called twice
+            if (updater) updateImageOffset("auto", 0);
+        }
+    }, 4000);
 }
 
 function init() {
@@ -320,7 +320,8 @@ function init() {
     context = dom.canvas.getContext('2d');
 
     dom.imgSelector.addEventListener('input', () => {
-        console.log( dom.imgSelector.value);
+        updateImageOffset("slider", Number(dom.imgSelector.value));
+        console.log(`SLIDER MOVED`);
     });
 
     dom.drawBtn.addEventListener('click', () => {
