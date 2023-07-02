@@ -6,10 +6,6 @@ const CHANNELS = 2;
 let CANVAS_HEIGHT;
 let CANVAS_WIDTH;
 const SAMPLE_RATE = 44100;
-const red = 0;
-const grn = 1;
-const blu = 2
-const bnw = 255;
 const IMG_DATA = {
     offset: 0,
     left: {
@@ -34,14 +30,14 @@ const IMG_DATA = {
             20354900                                                                //77
         ],
         colors: [
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //0
-            bnw, bnw, bnw, red, grn, blu, red, grn, blu, bnw,   //10
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn,   //20
-            blu, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw,   //30
-            bnw, red, grn, blu, red, grn, blu, red, grn, blu,   //40
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn,   //50
-            blu, red, grn, blu, bnw, red, grn, blu, red, grn,   //60
-            blu, red, grn, blu, bnw, bnw, bnw, bnw,             //70
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "red", "grn", "blu",   //0
+            "bnw", "bnw", "bnw", "red", "grn", "blu", "red", "grn", "blu", "bnw",   //10
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "red", "grn",   //20
+            "blu", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw",   //30
+            "bnw", "red", "grn", "blu", "red", "grn", "blu", "red", "grn", "blu",   //40
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "red", "grn",   //50
+            "blu", "red", "grn", "blu", "bnw", "red", "grn", "blu", "red", "grn",   //60
+            "blu", "red", "grn", "blu", "bnw", "bnw", "bnw", "bnw",             //70
         ],
     },
 
@@ -66,14 +62,14 @@ const IMG_DATA = {
             20338733                                                                //77
         ],
         colors: [
-            red, grn, blu, bnw, bnw, bnw, bnw, red, grn, blu,   //0
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw,   //10
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, red, grn, blu,   //20
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw,   //30
-            red, grn, blu, bnw, bnw, bnw, bnw, red, grn, blu,   //40
-            bnw, bnw, red, grn, blu, bnw, bnw, bnw, bnw, bnw,   //50
-            bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, bnw, red,   //60
-            grn, blu, bnw, red, grn, blu, bnw, bnw,             //70
+            "red", "grn", "blu", "bnw", "bnw", "bnw", "bnw", "red", "grn", "blu",   //0
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw",   //10
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "red", "grn", "blu",   //20
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw",   //30
+            "red", "grn", "blu", "bnw", "bnw", "bnw", "bnw", "red", "grn", "blu",   //40
+            "bnw", "bnw", "red", "grn", "blu", "bnw", "bnw", "bnw", "bnw", "bnw",   //50
+            "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "red",   //60
+            "grn", "blu", "bnw", "red", "grn", "blu", "bnw", "bnw",             //70
         ],
     }
 }
@@ -215,31 +211,33 @@ function findNextPeak(channel, position) {
     channel.pointer = newPosition;
 }
 
-function drawSingleLine(channel, offset, wIndex) {
+function drawSingleLine(channel, position, wIndex, rgb) {
     let canvas = channel.imageCanvas;
-    let context = canvas.getContext('2d');
+    let context = canvas.getContext('2d', { willReadFrequently: true });
 
-    let lineImageData = context.createImageData(1, CANVAS_HEIGHT);
-    let linePixelRow = lineImageData.data;
-    
 
-    let previousImageData = context.getImageData(0, wIndex, 1, CANVAS_HEIGHT);
+    let previousImageData = context.getImageData(wIndex, 0, 1, CANVAS_HEIGHT);
+    let linePixelRow = previousImageData.data;
 
-    //Shift the previous rows to make room for a new row 
-    //let imageData = context.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    //context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    //context.putImageData(imageData, 1, 0);
-
-    if (debug) console.log(channel.pointer);
     for (let i = 0; i < CANVAS_HEIGHT; i++) {
-        let intensity = 108 - channel.amplitudeData[offset + i] * 2555;
-        linePixelRow[0+i*4] = intensity; //red
-        linePixelRow[1+i*4] = intensity; //green
-        linePixelRow[2+i*4] = intensity; //blue
+        let intensity = Math.floor(108 - channel.amplitudeData[position + i] * 2555);
+        if (rgb === "bnw") {
+            linePixelRow[0+i*4] = intensity; //red
+            linePixelRow[1+i*4] = intensity; //green
+            linePixelRow[2+i*4] = intensity; //blue
+        } else if (rgb === "red") {
+            linePixelRow[0+i*4] = intensity; //red
+            linePixelRow[1+i*4] = 0; //green
+            linePixelRow[2+i*4] = 0; //blue
+        } else if (rgb === "grn") {
+            linePixelRow[1+i*4] = intensity; //green
+        } else if (rgb === "blu") {
+            linePixelRow[2+i*4] = intensity; //blue
+        }
         linePixelRow[3+i*4] = 255;
     }
 
-    context.putImageData(lineImageData, wIndex, 0);
+    context.putImageData(previousImageData, wIndex, 0);
 
 }
 
@@ -249,6 +247,7 @@ function displayImage(channel, index) {
     let oldPosition;
 
     let i = 0;
+    const rgb = channel.colors[IMG_DATA.offset];
 
     const interval = setInterval(() => {
         if (i === CANVAS_WIDTH) {
@@ -258,7 +257,7 @@ function displayImage(channel, index) {
             }, 500);
             return;
         }
-        drawSingleLine(channel, channel.pointer, i);
+        drawSingleLine(channel, channel.pointer, i, rgb);
 
         if (i % 2 === 0 && i!= 0) {
             findNextPeak(channel, oldPosition);
@@ -267,7 +266,7 @@ function displayImage(channel, index) {
             channel.pointer += CANVAS_HEIGHT;
         }
         i++;
-    }, 16);
+    }, 8);
 }
 
 function updateImageOffset(caller, num) {
@@ -296,7 +295,7 @@ function startDisplayingChannel(channel, updater) {
             //prevents updateImageOffset() from getting called twice
             if (updater) updateImageOffset("auto", 0);
         }
-    }, 4000);
+    }, 1000);
 }
 
 function init() {
@@ -317,7 +316,7 @@ function init() {
     CANVAS_HEIGHT = IMG_DATA.right.imageCanvas.height;
     getAudio();
     
-    context = dom.canvas.getContext('2d');
+    context = dom.canvas.getContext('2d', { willReadFrequently: true });
 
     dom.imgSelector.addEventListener('input', () => {
         updateImageOffset("slider", Number(dom.imgSelector.value));
@@ -325,8 +324,8 @@ function init() {
     });
 
     dom.drawBtn.addEventListener('click', () => {
-        startDisplayingChannel(IMG_DATA.left, 1);
-        startDisplayingChannel(IMG_DATA.right, 0);
+        startDisplayingChannel(IMG_DATA.left, 0);
+        startDisplayingChannel(IMG_DATA.right, 1);
     });
 
 }
