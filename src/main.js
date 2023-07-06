@@ -1,12 +1,9 @@
 let debug = 0;
-// 512 columns make up one image
-// each column is 8.3ms long
-//const AUDIO_FILE = new Audio('./assets/audio/voyager.mp3');
-const CHANNELS = 2;
 let CANVAS_HEIGHT;
 let CANVAS_WIDTH;
 const SAMPLE_RATE = 44100;
 const IMG_DATA = {
+    pause: false,
     offset: 0,
     left: {
         go: true,
@@ -39,6 +36,7 @@ const IMG_DATA = {
             "blu", "red", "grn", "blu", "bnw", "red", "grn", "blu", "red", "grn",   //60
             "blu", "red", "grn", "blu", "bnw", "bnw", "bnw", "bnw",             //70
         ],
+        space: 948540,
     },
 
     right: {
@@ -71,6 +69,7 @@ const IMG_DATA = {
             "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "bnw", "red",   //60
             "grn", "blu", "bnw", "red", "grn", "blu", "bnw", "bnw",             //70
         ],
+        space: 988053,
     }
 }
 
@@ -78,7 +77,6 @@ const IMG_DATA = {
 const audioContext = new AudioContext({
     sampleRate: SAMPLE_RATE,
 });
-const analyzer = audioContext.createAnalyser();
 
 let dom = {};
 let context;
@@ -87,112 +85,65 @@ let leftChannelData;
 let rightChannelData;
 let gotAudio = false;
 
+/**  
+ * Fetches audio through web audio API
+ */
 function getAudio(){
     fetch(`./src/assets/audio/voyager.mp3`)
-    //fetch(`./src/assets/audio/384kHzStereo.wav`)
         .then(data => data.arrayBuffer())
         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
         .then(decodedAudio => {
             leftChannelData = decodedAudio.getChannelData(0);
             rightChannelData = decodedAudio.getChannelData(1);
-            if (debug) console.log(`Sample rate: ${decodedAudio.sampleRate}`)
-            if (debug) console.log(`Length ${leftChannelData.length / decodedAudio.sampleRate}`);
-            let leftAmplitudeData = Array.from(leftChannelData, sample => sample);
-            let rightAmplitudeData = Array.from(rightChannelData, sample => Math.abs(sample));
+
             IMG_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample);
             IMG_DATA.right.amplitudeData = Array.from(rightChannelData, sample => sample);
-            printAudioBufferTimeFrame(leftAmplitudeData, 0, 1);
 
             gotAudio = true;
-            console.log(`Got audio`);
         })
         .catch(error => {
-            if (debug) console.log('Error fetching or decoding audio: ', error);
+            console.log('Error fetching or decoding audio: ', error);
         })
 }
 
-//test print float values
-function printAudioBuffer(buf1, buf2) {
-    if (debug) console.log(buf1.length / 44100);
-    if (debug) console.log(buf2.length);
-    for (let i = 0; i < 10; i++) {
-        //if (debug) console.log(`buf1: ${buf1[i]}, buf2: ${buf2[i]}`);
-    }
-    return;
-}
+/**
+ * Visualizes sound waves through oscilliscope. Each call updates the oscilliscope
+ * for `linelength` amount of samples.
+ * @param {object} channel Left or Right channel
+ * @param {number} linelength Number to samples to draw
+ * @returns none
+ */
+function updateOscilloscope(channel, linelength) {
+    const context = channel.oscilliscopeCanvas.getContext("2d");
+    const zoom = 200;
 
-function printAudioBufferTimeFrame(buf, startTime, endTime) {
-    let startSample = Math.floor(startTime * SAMPLE_RATE);
-    let endSample = Math.floor(endTime * SAMPLE_RATE);
-    if (debug) console.log(`between: ${startTime} and ${endTime}`);
-    if (debug) console.log(`start: ${startSample} + end: ${endSample}`);
- 
-    let total = 0
-    let max = 0;
-    for (let i = startSample; i < endSample; i++) {
-        //if (debug) console.log(`${i} buf: ${buf[i]}`);
-        if (buf[i] > max) {
-            max = buf[i];
-        }
-        //if (debug) console.log(`${i} diff: ${buf[i] - buf[i-1]}`)
-        total += 1;
-    }
-    if (debug) console.log(total);
-    if (debug) console.log(max);
-}
+    const height = channel.oscilliscopeCanvas.height;
+    const width = channel.oscilliscopeCanvas.width;
+    const center = height / 2;
+    let x = 0;
+    const dx = width / linelength;
+    const plotStart = -50;
 
-function updateOscilloscope(channel, index) {
-}
+    context.clearRect(0, 0, width, height);
+    context.beginPath();
+    context.moveTo(x, center);
+    context.strokeStyle = 'rgb(255,255,255)';
 
-function visualizeAudio(audioBuffer) {
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBuffer;
-
-    const analyser = audioContext.createAnalyser();
-    source.connect(analyser);
-    //analyser.connect(audioContext.destination);
-
-    //analyser setup
-    analyser.fftSize = 512;
-    const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-
-    function renderFrame() {
-        requestAnimationFrame(renderFrame);
-
-        analyser.getByteTimeDomainData(dataArray);
-
-        context.clearRect(0, 0, dom.canvas.width, dom.canvas.height);
-
-        const bufferLength = dataArray.length;
-        const sliceWidth = dom.canvas.width / bufferLength;
-        let x = 0;
-
-        context.beginPath();
-        context.lineWidth = 2;
-        context.strokeStyle = 'rgb(0,0,0)';
-
-        for (let i = 0; i < bufferLength; i++) {
-            const sample = dataArray[i] / 128.0;
-            const y = (sample * dom.canvas.height) / 2;
-
-            if (i === 0) {
-                context.moveTo(x, y);
-            } else {
-                context.lineTo(x, y);
-            }
-
-            x += sliceWidth;
-        }
-
-        context.lineTo(dom.canvas.width, dom.canvas.height / 2);
-        context.stroke();
+    for (let i = 0; i < linelength; i++) {
+        x += dx;
+        context.lineTo(x, center - channel.amplitudeData[i + channel.pointer + plotStart] * zoom);
     }
 
-    source.start(0);
-    renderFrame();
+    context.stroke();
 }
 
+/**
+ * Finds the next amplitude peak in the audio file, which represents a new
+ * image column
+ * @param {object} channel Left or Right channel
+ * @param {number} position current sample position in audio file
+ * @returns none
+ */
 function findNextPeak(channel, position) {
     const LOCAL_MIN = position + 730;
     const LOCAL_MAX = position + 740;
@@ -211,37 +162,53 @@ function findNextPeak(channel, position) {
     channel.pointer = newPosition;
 }
 
-function drawSingleLine(channel, position, wIndex, rgb) {
+/**
+ * Converts audio amplitude float into pixels for single line in canvas
+ * Each line represents 8ms of audio data.
+ *
+ * @param {object} channel Left or Right channel
+ * @param {number} position current sample position in audio file
+ * @param {number} colIndex column index of respective image
+ * @param {string} rgb color of pixels to draw.
+ *
+ * @returns none
+ */
+function drawSingleLine(channel, position, colIndex, rgb) {
     let canvas = channel.imageCanvas;
     let context = canvas.getContext('2d', { willReadFrequently: true });
 
-
-    let previousImageData = context.getImageData(wIndex, 0, 1, CANVAS_HEIGHT);
+    let previousImageData = context.getImageData(colIndex, 0, 1, CANVAS_HEIGHT);
     let linePixelRow = previousImageData.data;
 
     for (let i = 0; i < CANVAS_HEIGHT; i++) {
         let intensity = Math.floor(108 - channel.amplitudeData[position + i] * 2555);
         if (rgb === "bnw") {
-            linePixelRow[0+i*4] = intensity; //red
-            linePixelRow[1+i*4] = intensity; //green
-            linePixelRow[2+i*4] = intensity; //blue
+            linePixelRow[0+i*4] = intensity;    //red
+            linePixelRow[1+i*4] = intensity;    //green
+            linePixelRow[2+i*4] = intensity;    //blue
         } else if (rgb === "red") {
-            linePixelRow[0+i*4] = intensity; //red
-            linePixelRow[1+i*4] = 0; //green
-            linePixelRow[2+i*4] = 0; //blue
+            linePixelRow[0+i*4] = intensity;    //red
+            linePixelRow[1+i*4] = 0;            //green
+            linePixelRow[2+i*4] = 0;            //blue
         } else if (rgb === "grn") {
-            linePixelRow[1+i*4] = intensity; //green
-        } else if (rgb === "blu") {
-            linePixelRow[2+i*4] = intensity; //blue
+            linePixelRow[1+i*4] = intensity;    //green
+        } else {
+            linePixelRow[2+i*4] = intensity;    //blue
         }
+
         linePixelRow[3+i*4] = 255;
     }
 
-    context.putImageData(previousImageData, wIndex, 0);
-
+    context.putImageData(previousImageData, colIndex, 0);
 }
 
-function displayImage(channel, index) {
+/**
+ * Displays channel Image and oscilliscope data through drawSingleLine and 
+ * updateOscilloscope
+ * @param {object} channel Left or Right channel
+ * @param {number} index Image index 
+ */
+function displayChannelData(channel, index) {
     channel.go = false;
     channel.pointer = channel.timeStamps[index];
     let oldPosition;
@@ -250,6 +217,10 @@ function displayImage(channel, index) {
     const rgb = channel.colors[IMG_DATA.offset];
 
     const interval = setInterval(() => {
+        if (IMG_DATA.pause) {
+            return;
+        }
+
         if (i === CANVAS_WIDTH) {
             clearInterval(interval);
             setTimeout(() => {
@@ -258,6 +229,7 @@ function displayImage(channel, index) {
             return;
         }
         drawSingleLine(channel, channel.pointer, i, rgb);
+        updateOscilloscope(channel, 500);
 
         if (i % 2 === 0 && i!= 0) {
             findNextPeak(channel, oldPosition);
@@ -266,31 +238,38 @@ function displayImage(channel, index) {
             channel.pointer += CANVAS_HEIGHT;
         }
         i++;
-    }, 8);
+    }, 1);
 }
 
+/**
+ * Increments offset by 1 with each call, unless explicite number is provided
+ * @param {string} caller where this function is called from
+ * @param {number} num change offset numer if not incremental. i.e. Range input
+ */
 function updateImageOffset(caller, num) {
-
     if (caller === "slider") {
         IMG_DATA.offset = num;
         console.log(IMG_DATA.offset);
         return;
     }  
 
-    if (IMG_DATA.offset < 78) {
-        IMG_DATA.offset += 1;
-    } else {
-        IMG_DATA.offset = 0;
-    }
-    console.log(IMG_DATA.offset);
+    (IMG_DATA.offset < 78) ? IMG_DATA.offset++ : IMG_DATA.offset = 0;
+    
+    dom.imgSelector.value = IMG_DATA.offset;
+    dom.imgNumber.innerText = `${IMG_DATA.offset} / 77`;
 }
 
-function startDisplayingChannel(channel, updater) {
+/**
+ * Loops displayChannelData to new image offsets.
+ * Pretty poor design but ¯\_(ツ)_/¯
+ * @param {object} channel Left or Right Channel
+ * @param {number} updater updates Image offset
+ */
+function channelHandler(channel, updater) {
     setInterval(() => {
         if (!gotAudio) return;
         if (channel.go) {
-            displayImage(channel, IMG_DATA.offset);
-            updateOscilloscope(channel, IMG_DATA.offset);
+            displayChannelData(channel, IMG_DATA.offset);
 
             //prevents updateImageOffset() from getting called twice
             if (updater) updateImageOffset("auto", 0);
@@ -305,7 +284,10 @@ function init() {
         canvas: document.querySelector('#leftWaveformCanvas'),
         drawBtn: document.querySelector("#draw-circle"),
         imgSelector: document.querySelector("#imgSelector"),
+        imgNumber: document.querySelector("#imgNumber"),
+        pauseBtn: document.querySelector("#pause"),
 	};
+    dom.imgSelector.value = 1;
 
     IMG_DATA.right.oscilliscopeCanvas = document.querySelector("#rightWaveformCanvas");
     IMG_DATA.right.imageCanvas = document.querySelector("#rightChannelImage");
@@ -315,8 +297,6 @@ function init() {
     CANVAS_WIDTH = IMG_DATA.right.imageCanvas.width;
     CANVAS_HEIGHT = IMG_DATA.right.imageCanvas.height;
     getAudio();
-    
-    context = dom.canvas.getContext('2d', { willReadFrequently: true });
 
     dom.imgSelector.addEventListener('input', () => {
         updateImageOffset("slider", Number(dom.imgSelector.value));
@@ -324,10 +304,13 @@ function init() {
     });
 
     dom.drawBtn.addEventListener('click', () => {
-        startDisplayingChannel(IMG_DATA.left, 0);
-        startDisplayingChannel(IMG_DATA.right, 1);
+        channelHandler(IMG_DATA.left, 0);
+        channelHandler(IMG_DATA.right, 1);
     });
 
+    dom.pauseBtn.addEventListener('click', () => {
+        IMG_DATA.pause = !IMG_DATA.pause;
+    })
 }
 
 document.addEventListener('DOMContentLoaded', init);

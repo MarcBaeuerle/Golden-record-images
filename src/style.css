@@ -1,6 +1,6 @@
 body {
     color: white;
-    /* background-color: black; */
+    background-color: black;
 }
 
 .sample-image{
@@ -49,5 +49,5 @@ body {
 }
 
 canvas {
-    border: 1px solid black;
+    border: 1px solid white;
 }
