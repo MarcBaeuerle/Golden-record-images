@@ -1,6 +1,6 @@
-let debug = 0;
-let CANVAS_HEIGHT :number;
-let CANVAS_WIDTH :number;
+let debug = 1;
+let CANVAS_HEIGHT: number;
+let CANVAS_WIDTH: number;
 const SAMPLE_RATE = 44100;
 
 interface imgObj {
@@ -17,7 +17,7 @@ interface channelObj {
     amplitudeData: Array<number>;
     pointer: number;
     timeStamps: Array<number>;
-    colors: Array<String>;
+    colors: Array<string>;
     space: number;
 }
 const IMG_DATA: imgObj = {
@@ -25,11 +25,11 @@ const IMG_DATA: imgObj = {
     offset: 0,
     left: {
         go: true,
-        imageCanvas:  null, 
-        oscilliscopeCanvas: null, 
+        imageCanvas: null,
+        oscilliscopeCanvas: null,
         amplitudeData: [] as number[],
         pointer: 0,
-                    // "Welcome to the digital stone age" - Ron Barry
+        // "Welcome to the digital stone age" - Ron Barry
         timeStamps: [
             691479, 956699, 1226764, 1488444, 1746346, 2003886, 2253818,            //0
             2495501, 2738833, 2981916, 3295249, 3549540, 3812059, 4072272,          //7
@@ -58,8 +58,8 @@ const IMG_DATA: imgObj = {
     },
     right: {
         go: true,
-        imageCanvas:  null, 
-        oscilliscopeCanvas: null, 
+        imageCanvas: null,
+        oscilliscopeCanvas: null,
         amplitudeData: [] as number[],
         pointer: 0,
         timeStamps: [
@@ -95,10 +95,10 @@ const audioContext = new AudioContext({
 })
 
 let dom = {
-    drawBtn: null as HTMLElement | null, 
-    imgSelector: null as HTMLInputElement | null, 
-    imgNumber: null as HTMLElement | null, 
-    pauseBtn: null as HTMLElement | null, 
+    drawBtn: null as HTMLButtonElement | null,
+    imgSelector: null as HTMLInputElement | null,
+    imgNumber: null as HTMLElement | null,
+    pauseBtn: null as HTMLButtonElement | null,
 };
 let gotAudio = false;
 
@@ -110,8 +110,7 @@ function init(): void {
         pauseBtn: document.querySelector("#pause"),
     }
 
-    // const value = (document.querySelector("#imgSelector") as HTMLInputElement | null)?.value;
-    dom.imgSelector!.value = '0';
+    dom.imgSelector!.value = '1';
 
     IMG_DATA.right.oscilliscopeCanvas = document.querySelector("#rightWaveformCanvas");
     IMG_DATA.right.imageCanvas = document.querySelector("#rightChannelImage");
@@ -127,14 +126,16 @@ function init(): void {
     });
 
     dom.drawBtn?.addEventListener('click', () => {
-        // channelHandler(IMG_DATA.left, 0);
-        // channelHandler(IMG_DATA.right, 1);
+        channelHandler(IMG_DATA.left, false);
+        channelHandler(IMG_DATA.right, true);
+        console.log(`1`);
     });
-    
+
     dom.pauseBtn?.addEventListener('click', () => {
         IMG_DATA.pause = !IMG_DATA.pause;
     })
 }
+document.addEventListener('DOMContentLoaded', init);
 
 /** 
  * Fetches audio through web audio api and decodes the audio into a 
@@ -195,11 +196,11 @@ function displayChannelData(channel: channelObj, index: number): void {
             return;
         }
 
-        // drawSingleLine(channel, channel.pointer, i, rgb);
-        // updateOscilloscope(channel, 500);
+        drawSingleLine(channel, channel.pointer, i, rgb);
+        updateOscilliscope(channel, 500);
 
-        if (i % 2 === 0 && i!= 0) {
-            // findNextPeak(channel, oldPosition);
+        if (i % 2 === 0 && i != 0) {
+            findNextPeak(channel, oldPosition);
         } else {
             oldPosition = channel.pointer;
             channel.pointer += CANVAS_HEIGHT;
@@ -212,19 +213,51 @@ function displayChannelData(channel: channelObj, index: number): void {
 /**
  * Increments offset by 1 with each call, unless explicite number is provided
  */
-function updateImageOffset(caller: string, num: number): void{
+function updateImageOffset(caller: string, num: number): void {
+    if (caller === "slider") {
+        IMG_DATA.offset = num;
+        return;
+    }
+
+    (IMG_DATA.offset < 78) ? IMG_DATA.offset++ : IMG_DATA.offset = 0;
+
+    dom.imgSelector!.value = `${IMG_DATA.offset}`;
+    dom.imgNumber!.innerText = `${IMG_DATA.offset} / 77`;
+    return;
 }
 
 /**
  * Converts audio amplitude float into pixels for single line in canvas
  * Each line represents 8ms of audio data.
  */
-function drawSingleLine(
-    channel: channelObj,
-    position: number,
-    colIndex: number,
-    rgb: string
-): void {
+function drawSingleLine(channel: channelObj, position: number, colIndex: number, rgb: string): void {
+    let canvas = channel.imageCanvas;
+    let context = canvas!.getContext('2d', { willReadFrequently: true });
+
+    let previousImageData = context!.getImageData(colIndex, 0, 1, CANVAS_HEIGHT);
+    let linePixelRow = previousImageData!.data;
+
+    for (let i = 0; i < CANVAS_HEIGHT; i++) {
+        let intensity = Math.floor(108 - channel.amplitudeData[position + i] * 2555);
+        if (rgb === "bnw") {
+            linePixelRow[0 + i * 4] = intensity;    //red
+            linePixelRow[1 + i * 4] = intensity;    //green
+            linePixelRow[2 + i * 4] = intensity;    //blue
+        } else if (rgb === "red") {
+            linePixelRow[0 + i * 4] = intensity;    //red
+            linePixelRow[1 + i * 4] = 0;            //green
+            linePixelRow[2 + i * 4] = 0;            //blue
+        } else if (rgb === "grn") {
+            linePixelRow[1 + i * 4] = intensity;    //green
+        } else {
+            linePixelRow[2 + i * 4] = intensity;    //blue
+        }
+
+        linePixelRow[3 + i * 4] = 255;
+    }
+
+    context!.putImageData(previousImageData, colIndex, 0);
+    return;
 
 }
 
@@ -232,6 +265,53 @@ function drawSingleLine(
  * Visualizes sound waves through oscilliscope. Each call updates the oscilliscope
  * for `linelength` amount of samples.
  */
-function updateOscilliscope(channel: channelObj, lineLength: number): void {
+function updateOscilliscope(channel: channelObj, linelength: number): void {
+    const context = channel.oscilliscopeCanvas!.getContext("2d");
+    const zoom = 200;
+
+    const height = channel.oscilliscopeCanvas!.height;
+    const width = channel.oscilliscopeCanvas!.width;
+    const center = height / 2;
+    let x = 0;
+    const dx = width / linelength;
+    const plotStart = -50;
+
+    context!.clearRect(0, 0, width, height);
+    context!.beginPath();
+    context!.moveTo(x, center);
+    context!.strokeStyle = 'rgb(255,255,255)';
+
+    for (let i = 0; i < linelength; i++) {
+        x += dx;
+        context!.lineTo(x, center - channel.amplitudeData[i + channel.pointer + plotStart] * zoom);
+    }
+
+    context!.stroke();
+    return;
 
 }
+
+/**
+ * Finds the next amplitude peak in the audio file, which represents a new
+ * image column
+ */
+function findNextPeak(channel: channelObj, position: number): void {
+    const LOCAL_MIN = position + 730;
+    const LOCAL_MAX = position + 740;
+
+    if (LOCAL_MAX > channel.amplitudeData.length) return;
+
+    let newMax = 0;
+    let newPosition = position;
+
+    for (let i = LOCAL_MIN; i < LOCAL_MAX; i++) {
+        if (channel.amplitudeData[i] > newMax) {
+            newMax = channel.amplitudeData[i];
+            newPosition = i;
+        }
+    }
+    channel.pointer = newPosition;
+    return;
+}
+
+
