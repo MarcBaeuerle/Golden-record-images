@@ -11,7 +11,7 @@ const IMG_DATA = {
         oscilliscopeCanvas: null,
         amplitudeData: null,
         pointer: 0,
-                        // "Welcome to the digital stone age" - Ron Barry
+        // "Welcome to the digital stone age" - Ron Barry
         timeStamps: [
             691479, 956699, 1226764, 1488444, 1746346, 2003886, 2253818,            //0
             2495501, 2738833, 2981916, 3295249, 3549540, 3812059, 4072272,          //7
@@ -135,6 +135,7 @@ function updateOscilloscope(channel, linelength) {
     }
 
     context.stroke();
+    return;
 }
 
 /**
@@ -147,7 +148,7 @@ function updateOscilloscope(channel, linelength) {
 function findNextPeak(channel, position) {
     const LOCAL_MIN = position + 730;
     const LOCAL_MAX = position + 740;
-    
+
     if (LOCAL_MAX > channel.amplitudeData.length) return;
 
     let newMax = 0;
@@ -160,6 +161,7 @@ function findNextPeak(channel, position) {
         }
     }
     channel.pointer = newPosition;
+    return;
 }
 
 /**
@@ -200,6 +202,7 @@ function drawSingleLine(channel, position, colIndex, rgb) {
     }
 
     context.putImageData(previousImageData, colIndex, 0);
+    return;
 }
 
 /**
@@ -228,6 +231,7 @@ function displayChannelData(channel, index) {
             }, 500);
             return;
         }
+
         drawSingleLine(channel, channel.pointer, i, rgb);
         updateOscilloscope(channel, 500);
 
@@ -238,7 +242,9 @@ function displayChannelData(channel, index) {
             channel.pointer += CANVAS_HEIGHT;
         }
         i++;
-    }, 1);
+    }, 0);
+
+    return;
 }
 
 /**
@@ -254,9 +260,10 @@ function updateImageOffset(caller, num) {
     }  
 
     (IMG_DATA.offset < 78) ? IMG_DATA.offset++ : IMG_DATA.offset = 0;
-    
+
     dom.imgSelector.value = IMG_DATA.offset;
     dom.imgNumber.innerText = `${IMG_DATA.offset} / 77`;
+    return;
 }
 
 /**
@@ -270,15 +277,15 @@ function channelHandler(channel, updater) {
         if (!gotAudio) return;
         if (channel.go) {
             displayChannelData(channel, IMG_DATA.offset);
-
             //prevents updateImageOffset() from getting called twice
             if (updater) updateImageOffset("auto", 0);
         }
     }, 1000);
+    return;
 }
 
 function init() {
-	dom = {
+    dom = {
         leftCanvas: document.querySelector('.left-canvas'),
         rightCanvas: document.querySelector('.right-canvas'),
         canvas: document.querySelector('#leftWaveformCanvas'),
@@ -286,14 +293,14 @@ function init() {
         imgSelector: document.querySelector("#imgSelector"),
         imgNumber: document.querySelector("#imgNumber"),
         pauseBtn: document.querySelector("#pause"),
-	};
+    };
     dom.imgSelector.value = 1;
 
     IMG_DATA.right.oscilliscopeCanvas = document.querySelector("#rightWaveformCanvas");
     IMG_DATA.right.imageCanvas = document.querySelector("#rightChannelImage");
     IMG_DATA.left.oscilliscopeCanvas = document.querySelector("#leftWaveformCanvas");
     IMG_DATA.left.imageCanvas = document.querySelector("#leftChannelImage");
-    
+
     CANVAS_WIDTH = IMG_DATA.right.imageCanvas.width;
     CANVAS_HEIGHT = IMG_DATA.right.imageCanvas.height;
     getAudio();
