@@ -1,1 +1,1 @@
-./public/main.js linguist-vendored
+*.js linguist-vendored
