@@ -1,53 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=Roboto+Mono&family=Source+Code+Pro:wght@500&family=Ubuntu:wght@300;400;500&display=swap');
+
 body {
     color: white;
-    background-color: black;
+    background-color: #121212;
+    font-family: 'Ubuntu', sans-serif;
 }
 
-.sample-image{
-    height: 50px;
-    width: 50px;
-    background-color: red;
+* {
+    margin: 0;
+    padding: 0;
 }
 
-.circle {
-    border-radius: 100%;
+.controls {
+    background-color: lightblue;
+}
+
+.images {
     display: flex;
-    flex-wrap: wrap;
+}
+
+.channel {
+    width: 50%;
+    margin: 2px;
+    display: flex;
+    flex-direction: column;
+}
+
+h2 {
+    font-size: 200%;
+    margin: 1vh auto 1vh auto;
+    font-weight: 400;
+}
+
+.canvas {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-}
-
-.solar-system {
-    position: relative;
-    background-color: darkblue;
-    display: flex;
-    flex-direction: row;
-}
-
-.voyager-one {
-    background-color: white;
-    color: black !important;
-    height: 20px;
-    width: 50px;
-    overflow: hidden;
-}
-.sun {
-    height: 300px;
-    aspect-ratio: 1/1;
-    background-color: orangered;
-}
-
-.planet {
-    height: 100px;
-    width: 100px;
-    background-color: blue;
-}
-
-#draw {
-    border: 1px solid white;
-    display: flex;
 }
 
 canvas {
-    border: 1px solid white;
+    margin: 1vh;
+    width: 80%;
+    border: 1px solid lightgray;
 }
+
+.credits {
+    width: 80%;
+    margin: auto;
+    margin-top: 1vh;
+    font-weight: 200;
+    opacity: 100%;
+    transition: all 0.3s ease;
+}
+
+.changed {
+    opacity: 0%;
+}
+
+.credits h2 {
+    font-weight: 300;
+    color: lightblue;
+}
+
+
