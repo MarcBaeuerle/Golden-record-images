@@ -1,34 +1,143 @@
-@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400&family=Roboto+Mono&family=Source+Code+Pro:wght@500&family=Ubuntu:wght@300;400;500&display=swap');
-
-body {
-    color: white;
-    background-color: #121212;
-    font-family: 'Ubuntu', sans-serif;
-}
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500&family=Ubuntu:wght@300;400;500&display=swap');
 
 * {
     margin: 0;
     padding: 0;
 }
 
-.controls {
-    background-color: lightblue;
+body {
+    color: lightgray;
+    background-color: #121212;
+    background-color: black;
+    font-family: 'Ubuntu', sans-serif;
+    overflow-x: hidden;
 }
+
+h1 {
+    color: #bc881c;
+    font-family: 'Roboto Slab', serif;
+    font-weight: 400;
+    font-size: 3rem;
+}
+
+.description {
+    text-align: center;
+    background-color: #212121;
+    padding-top: 1rem;
+}
+
+.description p {
+    padding: 1rem;
+    width: 50%;
+    margin: auto;
+    font-family: Helvetica, sans-serif;
+    font-size: 1.2rem;
+    font-weight: 200;
+    line-height: 1.8rem;
+}
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+    background-color: #2F3135;
+    background-color: #212121;
+    border-bottom: solid 1px lightgray;
+    z-index: 2;
+    position: sticky;
+    top: 0;
+}
+
+.buttons {
+    background-color: #121212;
+    border-radius: 2rem;
+    padding: 0 1rem 0 1rem;
+}
+
+input[type="range"] {
+    width: 50%;
+    filter: invert(0.9) saturate(0.8);
+}
+
+#record-background {
+    filter: blur(3px) brightness(20%);
+    z-index: -1;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.svg {
+    filter: invert(1) brightness(0.75);
+    transition: 0.2s;
+}
+
+.svg:hover {
+    cursor: pointer;
+    filter: invert(1);
+}
+
+.svg:active {
+    filter: invert(1) brightness(0.75);
+    transition: 0s;
+}
+
+.hide {
+    display: none;
+}
+
 
 .images {
     display: flex;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+    position: relative;
+}
+
+.loader {
+    position: absolute;
+    text-align: center;
+    height: 50%;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.loader p {
+    z-index: 3;
+    font-size: 2rem;
+}
+
+.spinner {
+    height: 100%;
+    animation-name: spin;
+    animation-duration: 4600ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear; 
+}
+
+@keyframes spin {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
 }
 
 .channel {
     width: 50%;
-    margin: 2px;
     display: flex;
     flex-direction: column;
 }
 
 h2 {
-    font-size: 200%;
-    margin: 1vh auto 1vh auto;
+    font-size: 2rem;
+    margin: 0vh auto 0vh auto;
+    padding: 1vh 0 1vh 0;
     font-weight: 400;
 }
 
@@ -40,12 +149,13 @@ h2 {
 
 canvas {
     margin: 1vh;
-    width: 80%;
-    border: 1px solid lightgray;
+    width: 70%;
+    border: 1px solid #525252;
+    background-color: black;
 }
 
 .credits {
-    width: 80%;
+    width: 70%;
     margin: auto;
     margin-top: 1vh;
     font-weight: 200;
@@ -60,6 +170,117 @@ canvas {
 .credits h2 {
     font-weight: 300;
     color: lightblue;
+    font-size: 1.7rem;
 }
 
 
+.info {
+    padding-top: 4vh;
+    padding-bottom: 4vh;
+    background-color: lightgray;
+    font-family: 'Roboto Slab', serif;
+    color: black;
+}
+
+.info h2 {
+    text-align: center;
+}
+
+.instructions {
+    list-style-type: none;
+    margin: auto;
+    position: relative;
+    width: 50%;
+    text-align: center;
+    font-family: Helvetica, sans-serif;
+}
+
+.center-align {
+    text-align: center;
+}
+
+.resources {
+    display: flex;
+    padding: 3rem 1rem 3rem 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+
+}
+
+.nasa {
+    max-width: 500px;
+    border: 1px solid black;
+}
+
+footer {
+    background-color: #121212;
+    color: lightgray;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Ubuntu', sans-serif;
+    font-weight: 300;
+    padding: 2rem;
+}
+
+footer a {
+    color: lightgray;
+}
+footer a:visited {
+    color: lightgray;
+}
+
+footer a:hover {
+    color: white;
+}
+
+footer p {
+    padding: 0;
+    margin: 10px;
+}
+
+@media (max-width: 1000px) {
+    .images {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2rem;
+    }
+
+    .channel {
+        width: 70%;
+    }
+
+    .controls {
+        position: sticky;
+        top: 0;
+    }
+
+    input[type="range"] {
+        width: 70%;
+    }
+
+    #record-background {
+        height: 70%;
+        width: auto;
+    }
+
+    .instructions {
+        width: 70%;
+        text-align: justify;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .channel {
+        width: 100%;
+    }
+
+    .loader {
+        width: 50%;
+        height: auto;
+    }
+
+}

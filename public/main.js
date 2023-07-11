@@ -10,15 +10,15 @@ let dom = {
     imgSelector: null,
     imgNext: null,
     imgBack: null,
-    imgNumber: null,
     pauseBtn: null,
+    playBtn: null,
 };
 function init() {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     dom = {
         imgSelector: document.querySelector("#imgSelector"),
-        imgNumber: document.querySelector("#imgNumber"),
         pauseBtn: document.querySelector("#pause"),
+        playBtn: document.querySelector("#play"),
         imgNext: document.querySelector("#imgNext"),
         imgBack: document.querySelector("#imgBack"),
     };
@@ -47,17 +47,26 @@ function init() {
         updateImageOffset("inc", 0);
     });
     (_d = dom.pauseBtn) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => {
-        IMG_DATA.pause = !IMG_DATA.pause;
+        toggleBtn();
+    });
+    (_e = dom.playBtn) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
+        toggleBtn();
     });
 }
 document.addEventListener('DOMContentLoaded', init);
+function toggleBtn() {
+    var _a, _b;
+    (_a = dom.pauseBtn) === null || _a === void 0 ? void 0 : _a.classList.toggle('hide');
+    (_b = dom.playBtn) === null || _b === void 0 ? void 0 : _b.classList.toggle('hide');
+    IMG_DATA.pause = !IMG_DATA.pause;
+}
 /**
  * Fetches audio through web audio api and decodes the audio into a
  * Float32 Array
  */
 function getAudio() {
     fetch(`./src/assets/audio/voyager.mp3`)
-        .then(data => data.arrayBuffer())
+        .then(response => response.arrayBuffer())
         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
         .then(decodedAudio => {
         const leftChannelData = decodedAudio.getChannelData(0);
@@ -133,9 +142,13 @@ function updateImageOffset(caller, num) {
         IMG_DATA.offset += num;
         return;
     }
-    (IMG_DATA.offset < 78) ? IMG_DATA.offset++ : IMG_DATA.offset = 0;
+    if (IMG_DATA.offset < 77) {
+        IMG_DATA.offset++;
+    }
+    else {
+        IMG_DATA.offset = 0;
+    }
     dom.imgSelector.value = `${IMG_DATA.offset}`;
-    dom.imgNumber.innerText = `${IMG_DATA.offset} / 78`;
     return;
 }
 /**
@@ -218,11 +231,12 @@ function findNextPeak(channel, position) {
  * Updates the credits text, called when image changes.
  */
 function updateCredits(channel, position) {
-    var _a;
-    if (channel.colors[IMG_DATA.offset] === "bnw" || channel.colors[IMG_DATA.offset] === "red") {
+    var _a, _b;
+    if (channel.credits[position].split(",")[0] != ((_a = channel.creditsTitle) === null || _a === void 0 ? void 0 : _a.innerText)) {
+        let str = channel.credits[position];
         let title = channel.credits[position].split(",")[0];
         let person = channel.credits[position].split(",")[1];
-        (_a = channel.creditsContainer) === null || _a === void 0 ? void 0 : _a.classList.add('changed');
+        (_b = channel.creditsContainer) === null || _b === void 0 ? void 0 : _b.classList.add('changed');
         setTimeout(() => {
             var _a;
             channel.creditsTitle.innerText = title;

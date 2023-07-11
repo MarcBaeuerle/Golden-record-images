@@ -34,15 +34,15 @@ let dom = {
     imgSelector: null as HTMLInputElement | null,
     imgNext: null as HTMLInputElement | null,
     imgBack: null as HTMLInputElement | null,
-    imgNumber: null as HTMLElement | null,
     pauseBtn: null as HTMLButtonElement | null,
+    playBtn: null as HTMLButtonElement | null,
 };
 
 function init(): void {
     dom = {
         imgSelector: document.querySelector("#imgSelector"),
-        imgNumber: document.querySelector("#imgNumber"),
         pauseBtn: document.querySelector("#pause"),
+        playBtn: document.querySelector("#play"),
         imgNext: document.querySelector("#imgNext"),
         imgBack: document.querySelector("#imgBack"),
     }
@@ -80,11 +80,20 @@ function init(): void {
     });
 
     dom.pauseBtn?.addEventListener('click', () => {
-        IMG_DATA.pause = !IMG_DATA.pause;
+        toggleBtn();
+    })
+
+    dom.playBtn?.addEventListener('click', () => {
+        toggleBtn();
     })
 }
 document.addEventListener('DOMContentLoaded', init);
 
+function toggleBtn():void {
+    dom.pauseBtn?.classList.toggle('hide');
+    dom.playBtn?.classList.toggle('hide');
+    IMG_DATA.pause = !IMG_DATA.pause;
+}
 
 
 /** 
@@ -93,7 +102,7 @@ document.addEventListener('DOMContentLoaded', init);
  */
 function getAudio(): void {
     fetch(`./src/assets/audio/voyager.mp3`)
-        .then(data => data.arrayBuffer())
+        .then(response => response.arrayBuffer())
         .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
         .then(decodedAudio => {
             const leftChannelData = decodedAudio.getChannelData(0);
@@ -180,10 +189,13 @@ function updateImageOffset(caller: string, num: number): void {
         return;
     }
 
-    (IMG_DATA.offset < 78) ? IMG_DATA.offset++ : IMG_DATA.offset = 0;
+    if (IMG_DATA.offset < 77) {
+        IMG_DATA.offset++;
+    } else {
+        IMG_DATA.offset = 0;
+    }
 
     dom.imgSelector!.value = `${IMG_DATA.offset}`;
-    dom.imgNumber!.innerText = `${IMG_DATA.offset} / 78`;
     return;
 }
 
@@ -219,7 +231,6 @@ function drawSingleLine(channel: channelObj, position: number, colIndex: number,
 
     context!.putImageData(previousImageData, colIndex, 0);
     return;
-
 }
 
 /**
@@ -279,7 +290,8 @@ function findNextPeak(channel: channelObj, position: number): void {
  * Updates the credits text, called when image changes.
  */
 function updateCredits(channel: channelObj, position: number): void{
-    if (channel.colors[IMG_DATA.offset] === "bnw" || channel.colors[IMG_DATA.offset] === "red") {
+    if (channel.credits[position].split(",")[0] != channel.creditsTitle?.innerText) {
+        let str = channel.credits[position];
         let title = channel.credits[position].split(",")[0];
         let person = channel.credits[position].split(",")[1];
 
@@ -292,6 +304,7 @@ function updateCredits(channel: channelObj, position: number): void{
             channel.creditsContainer?.classList.remove('changed');
         }, 300);
     }
+
     return;
 }
 

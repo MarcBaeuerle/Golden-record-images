@@ -5,44 +5,110 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="./src/style.css" rel="stylesheet">
-        <link rel="shortcut icon" href="#">
+        <link rel="shortcut icon" href="src/assets/images/golden_record_icon.webp">
         <script src="./public/main.js"></script>
     </head>
     <body>
-        <h1>Golden record</h1> 
-        <div class="controls">
-            <img id="imgBack" src="src/assets/images/previous_icon.svg">
-            <img id="pause" src="src/assets/images/pause_icon.svg">
-            <img id="imgNext" src="src/assets/images/next_icon.svg">
-            <input id="imgSelector" type="range" min="0" max="77"> 
-            <p id="imgNumber">1/78</p>
+        <section class="description">
+            <h1>The Golden record</h1> 
+            <p>
+                The Golden Record is a phonograph record that was included on the Voyager 1 
+                and Voyager 2 spacecraft, which were launched in 1977. The record contains 
+                sounds and images intended to provide information about Earth to any extraterrestrial 
+                intelligence that might come across it.
+                <br>
+                    Below are the live decodings of the 116 images that are present on the record.
+            </p>
+        </section>
+        <!-- Control Menu  -->
+        <div class="sticky">
+            <section class="controls">
+                <div class="buttons">
+                    <img class="svg" id="imgBack" src="src/assets/images/previous_icon.svg" width="50" height="50">
+                    <img class="svg hide" id="play" src="src/assets/images/play_icon.svg" width="50" height="50">
+                    <img class="svg" id="pause" src="src/assets/images/pause_icon.svg" width="50" height="50">
+                    <img class="svg" id="imgNext" src="src/assets/images/next_icon.svg" width="50" height="50">
+                </div>
+                <input id="imgSelector" type="range" min="0" max="78"> 
+            </section>
+
+            <!-- Image rendering + sound wave visualizer -->
+            <section class="images">
+                <img id="record-background" src="src/assets/images/sounds-of-earth.jpg"></img>
+                <div class="loader">
+                    <img class="spinner" src="src/assets/images/golden-record-spnner.webp">
+                    <p>Loading Audio File</p>
+                </div>
+                <!-- Left Channel -->
+                <div class="channel">
+                    <h2>Left Channel</h2>
+                    <section class="canvas">
+                        <canvas id="leftWaveformCanvas" width="520" height="100"></canvas>
+                        <canvas id="leftChannelImage" class="chnImage" width="520" height="367"></canvas>
+                    </section>
+                    <section id="leftCredits" class="credits">
+                        <h2 id="leftCreditsTitle">&nbsp;</h2>
+                        <p id="leftCreditsPerson">&nbsp;</p>
+                    </section>
+                </div>
+
+                <!-- Right Channel  -->
+                <div class="channel">
+                    <h2>Right Channel</h2>
+                    <section class="canvas">
+                        <canvas id="rightWaveformCanvas" width="520" height="100"></canvas>
+                        <canvas id="rightChannelImage" class="chnImage" width="520" height="367"></canvas>
+                    </section>
+                    <section id="rightCredits" class="credits">
+                        <h2 id="rightCreditsTitle">&nbsp;</h2>
+                        <p id="rightCreditsPerson">&nbsp;</p>
+                    </section>
+                </div>
+            </section>
         </div>
 
-        <div class="images">
-            <div class="channel">
-                <h2>Left Channel</h2>
-                <section class="canvas">
-                    <canvas id="leftWaveformCanvas" width="520" height="100"></canvas>
-                    <canvas id="leftChannelImage" class="chnImage" width="520" height="367"></canvas>
-                </section>
-                <section id="leftCredits" class="credits">
-                    <h2 id="leftCreditsTitle">Title</h2>
-                    <p id="leftCreditsPerson">person</p>
-                </section>
-            </div>
+        <!-- More Information -->
+        <section class="info">
+            <h2>How the images are created</h2>
+            <ul class="instructions">
+                <br>
+                <p>The Golden Record consists of 116 images that are encoded through an audio recording which consists of two
+                    channels: left and right.
+                </p>
+                <br>
+                <p>We know, from the cover, that each image is made up of 520 'scan lines' which each last roughly 8ms. Therefore
+                    to produce one cohesive image, we must stack 520 of these 'scan lines' next to each other. </p>
+                <br>
+                <p>When looking at each 8ms 'scan line' through audacity, a free audio editing software, we can see that the
+                    audio is simply made up of many 'dots' that are represented through a 32bit floating point number.</p>
+                <br>
+                <p>These numbers are then converted into pixels, which should (with a lot of tinkering) produce an image.</p>
+                <br>
+                <p class="center-align">The MP3 Recording can be found 
+                    <a href="https://soundcloud.com/user-482195982/voyager-golden-record-encoded-images" target="_blank">here</a>
 
-            <div class="channel">
-                <h2>Right Channel</h2>
-                <section class="canvas">
-                    <canvas id="rightWaveformCanvas" width="520" height="100"></canvas>
-                    <canvas id="rightChannelImage" class="chnImage" width="520" height="367"></canvas>
-                </section>
-                <section id="rightCredits" class="credits">
-                    <h2 id="rightCreditsTitle">Title</h2>
-                    <p id="rightCreditsPerson">Person</p>
-                </section>
+                </p>
+            </ul>
+        </section>
+
+        <section class="info">
+            <h2>Extra resources</h2>
+            <div class="resources">
+                <a href="https://voyager.jpl.nasa.gov/golden-record/" target="_blank">
+                    <img class="nasa" src="src/assets/images/nasa_frame.webp">
+                </a>
+                <div>
+                    <iframe width="500" height="281" src="https://www.youtube.com/embed/RRuovINxpPc" title="YouTube video player" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen></iframe>
+                </div>
             </div>
-        </div>
+        </section>
+        <!-- Footer  -->
+        <footer>
+            <p>Built and designed by Marc Baeuerle</p>
+            <p>Project Hosted on <a href="https://github.com/MarcBaeuerle/Golden-Record">Github</a></p>
+        </footer>
     </body>
-    
+
 </html>
