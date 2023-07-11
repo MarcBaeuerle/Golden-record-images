@@ -36,6 +36,7 @@ let dom = {
     imgBack: null as HTMLInputElement | null,
     pauseBtn: null as HTMLButtonElement | null,
     playBtn: null as HTMLButtonElement | null,
+    loader: null as HTMLElement | null,
 };
 
 function init(): void {
@@ -45,6 +46,7 @@ function init(): void {
         playBtn: document.querySelector("#play"),
         imgNext: document.querySelector("#imgNext"),
         imgBack: document.querySelector("#imgBack"),
+        loader: document.querySelector(".loader"),
     }
 
     dom.imgSelector!.value = '1';
@@ -65,7 +67,17 @@ function init(): void {
     CANVAS_HEIGHT = IMG_DATA.right.imageCanvas!.height;
     getAudio();
 
+    return;
+}
+document.addEventListener('DOMContentLoaded', init);
 
+function toggleBtn():void {
+    dom.pauseBtn?.classList.toggle('hide');
+    dom.playBtn?.classList.toggle('hide');
+    IMG_DATA.pause = !IMG_DATA.pause;
+}
+
+function assignListeners(): void {
     dom.imgSelector?.addEventListener('input', () => {
         updateImageOffset("slider", Number(dom.imgSelector!.value));
     });
@@ -86,15 +98,8 @@ function init(): void {
     dom.playBtn?.addEventListener('click', () => {
         toggleBtn();
     })
+    return;
 }
-document.addEventListener('DOMContentLoaded', init);
-
-function toggleBtn():void {
-    dom.pauseBtn?.classList.toggle('hide');
-    dom.playBtn?.classList.toggle('hide');
-    IMG_DATA.pause = !IMG_DATA.pause;
-}
-
 
 /** 
  * Fetches audio through web audio api and decodes the audio into a 
@@ -111,8 +116,15 @@ function getAudio(): void {
             IMG_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample)
             IMG_DATA.right.amplitudeData = Array.from(rightChannelData, sample => sample)
 
-            channelHandler(IMG_DATA.left, false);
-            channelHandler(IMG_DATA.right, true);
+            dom.loader!.classList.add('no-opacity');
+
+            setTimeout(() => {
+                dom.loader!.style.display = "none";
+                channelHandler(IMG_DATA.left, false);
+                channelHandler(IMG_DATA.right, true);
+                assignListeners();
+            }, 400);
+
         })
         .catch(error => {
             console.log('Error fetching or decoding audio: ', error);

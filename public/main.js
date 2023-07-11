@@ -12,15 +12,16 @@ let dom = {
     imgBack: null,
     pauseBtn: null,
     playBtn: null,
+    loader: null,
 };
 function init() {
-    var _a, _b, _c, _d, _e;
     dom = {
         imgSelector: document.querySelector("#imgSelector"),
         pauseBtn: document.querySelector("#pause"),
         playBtn: document.querySelector("#play"),
         imgNext: document.querySelector("#imgNext"),
         imgBack: document.querySelector("#imgBack"),
+        loader: document.querySelector(".loader"),
     };
     dom.imgSelector.value = '1';
     IMG_DATA.right.oscilliscopeCanvas = document.querySelector("#rightWaveformCanvas");
@@ -36,6 +37,17 @@ function init() {
     CANVAS_WIDTH = IMG_DATA.right.imageCanvas.width;
     CANVAS_HEIGHT = IMG_DATA.right.imageCanvas.height;
     getAudio();
+    return;
+}
+document.addEventListener('DOMContentLoaded', init);
+function toggleBtn() {
+    var _a, _b;
+    (_a = dom.pauseBtn) === null || _a === void 0 ? void 0 : _a.classList.toggle('hide');
+    (_b = dom.playBtn) === null || _b === void 0 ? void 0 : _b.classList.toggle('hide');
+    IMG_DATA.pause = !IMG_DATA.pause;
+}
+function assignListeners() {
+    var _a, _b, _c, _d, _e;
     (_a = dom.imgSelector) === null || _a === void 0 ? void 0 : _a.addEventListener('input', () => {
         updateImageOffset("slider", Number(dom.imgSelector.value));
     });
@@ -52,13 +64,7 @@ function init() {
     (_e = dom.playBtn) === null || _e === void 0 ? void 0 : _e.addEventListener('click', () => {
         toggleBtn();
     });
-}
-document.addEventListener('DOMContentLoaded', init);
-function toggleBtn() {
-    var _a, _b;
-    (_a = dom.pauseBtn) === null || _a === void 0 ? void 0 : _a.classList.toggle('hide');
-    (_b = dom.playBtn) === null || _b === void 0 ? void 0 : _b.classList.toggle('hide');
-    IMG_DATA.pause = !IMG_DATA.pause;
+    return;
 }
 /**
  * Fetches audio through web audio api and decodes the audio into a
@@ -73,8 +79,13 @@ function getAudio() {
         const rightChannelData = decodedAudio.getChannelData(1);
         IMG_DATA.left.amplitudeData = Array.from(leftChannelData, sample => sample);
         IMG_DATA.right.amplitudeData = Array.from(rightChannelData, sample => sample);
-        channelHandler(IMG_DATA.left, false);
-        channelHandler(IMG_DATA.right, true);
+        dom.loader.classList.add('no-opacity');
+        setTimeout(() => {
+            dom.loader.style.display = "none";
+            channelHandler(IMG_DATA.left, false);
+            channelHandler(IMG_DATA.right, true);
+            assignListeners();
+        }, 400);
     })
         .catch(error => {
         console.log('Error fetching or decoding audio: ', error);
