@@ -24,19 +24,19 @@
         <div class="sticky">
             <section class="controls">
                 <div class="buttons">
-                    <img class="svg" id="imgBack" src="src/assets/images/previous_icon.svg" width="50" height="50">
-                    <img class="svg hide" id="play" src="src/assets/images/play_icon.svg" width="50" height="50">
-                    <img class="svg" id="pause" src="src/assets/images/pause_icon.svg" width="50" height="50">
-                    <img class="svg" id="imgNext" src="src/assets/images/next_icon.svg" width="50" height="50">
+                    <img class="svg" id="imgBack" src="src/assets/images/previous_icon.svg" width="50" height="50" alt="Back Image Button">
+                    <img class="svg hide" id="play" src="src/assets/images/play_icon.svg" width="50" height="50" alt="Play Button">
+                    <img class="svg" id="pause" src="src/assets/images/pause_icon.svg" width="50" height="50" alt="Pause Button">
+                    <img class="svg" id="imgNext" src="src/assets/images/next_icon.svg" width="50" height="50" alt="Next Image Button">
                 </div>
                 <input id="imgSelector" type="range" min="0" max="78"> 
             </section>
 
             <!-- Image rendering + sound wave visualizer -->
             <section class="images">
-                <img id="record-background" src="src/assets/images/sounds-of-earth.jpg"></img>
+                <img id="record-background" src="src/assets/images/sounds-of-earth.jpg" alt="Image of Golden Record"></img>
                 <div class="loader">
-                    <img class="spinner" src="src/assets/images/golden-record-spnner.webp">
+                    <img class="spinner" src="src/assets/images/golden-record-spnner.webp" alt="Image of Golden Record">
                     <p>Loading Audio File...</p>
                     <p style="font-size: 1rem;">This might take a while</p>
                 </div>
@@ -44,8 +44,8 @@
                 <div class="channel">
                     <h2>Left Channel</h2>
                     <section class="canvas">
-                        <canvas id="leftWaveformCanvas" width="520" height="100"></canvas>
-                        <canvas id="leftChannelImage" class="chnImage" width="520" height="367"></canvas>
+                        <canvas id="leftWaveformCanvas" width="520" height="100">HTML5 Canvas not supported</canvas>
+                        <canvas id="leftChannelImage" class="chnImage" width="520" height="367">HTML5 Canvas not supported</canvas>
                     </section>
                     <section id="leftCredits" class="credits">
                         <h2 id="leftCreditsTitle">&nbsp;</h2>
@@ -57,8 +57,8 @@
                 <div class="channel">
                     <h2>Right Channel</h2>
                     <section class="canvas">
-                        <canvas id="rightWaveformCanvas" width="520" height="100"></canvas>
-                        <canvas id="rightChannelImage" class="chnImage" width="520" height="367"></canvas>
+                        <canvas id="rightWaveformCanvas" width="520" height="100">HTML5 Canvas not supported</canvas>
+                        <canvas id="rightChannelImage" class="chnImage" width="520" height="367">HTML5 Canvas not supported</canvas>
                     </section>
                     <section id="rightCredits" class="credits">
                         <h2 id="rightCreditsTitle">&nbsp;</h2>
