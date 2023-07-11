@@ -4,10 +4,10 @@
 Real-time decoding and Audio Visualizer of the 116 images present on the Voyager Golden Record using the browser. The speed in which the images are displayed are not representative of those on the record, as device performance is what dictates the speed.
 
 ### Table of contents
-	- [Images](#images)
-	- [Process](#process)
-	- [Poor Image Quality?](#poor-image-quality)
-	- [Acknowledgements](#acknowledgements)
+- [Images](#images)
+- [Process](#process)
+- [Poor Image Quality?](#poor-image-quality)
+- [Acknowledgements](#acknowledgements)
 
 ## Images
 https://github.com/MarcBaeuerle/Golden-record/assets/92479171/ce1ff0fe-c4e2-4721-a17a-58d55e8fec1a

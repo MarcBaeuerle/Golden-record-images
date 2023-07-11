@@ -106,13 +106,12 @@ input[type="range"] {
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    background-color: rgba(12, 12, 12, 0.5);
+    background-color: rgba(12, 12, 12, 0.8);
     opacity: 100%;
     transition: 0.5s ease;
 }
 
 .no-opacity {
-
     opacity: 0%;
 }
 
@@ -130,12 +129,12 @@ input[type="range"] {
 }
 
 @keyframes spin {
-    from {
-        transform:rotate(0deg);
-    }
-    to {
-        transform:rotate(360deg);
-    }
+from {
+    transform:rotate(0deg);
+}
+to {
+    transform:rotate(360deg);
+}
 }
 
 .channel {
@@ -252,6 +251,10 @@ footer p {
 }
 
 @media (max-width: 1000px) {
+    .description p {
+        width: 70%;
+    }
+
     .images {
         flex-wrap: wrap;
         justify-content: center;
@@ -290,6 +293,10 @@ footer p {
 
     .channel {
         width: 100%;
+    }
+
+    .description p {
+        width: 90%;
     }
 
 }
