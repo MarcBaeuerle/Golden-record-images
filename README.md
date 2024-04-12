@@ -1,8 +1,7 @@
 
 # [Golden Record Images](https://goldenrecord.netlify.app/)
 
-Real-time decoding and Audio Visualizer of the 116 images present on the Voyager Golden Record using the browser. The speed in which the images are displayed are not representative of those on the record, as device performance is what dictates the speed.
-
+Real-time decoding and Audio Visualizer of the 116 images present on the Voyager Golden Record using the browser. The speed in which the images are displayed are not representative of those on the record.
 Site: <https://goldenrecord.netlify.app/>
 
 ### Table of contents
